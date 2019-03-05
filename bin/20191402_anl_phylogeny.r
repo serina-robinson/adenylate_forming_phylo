@@ -1,12 +1,12 @@
 # Install packages
 pacman::p_load("DECIPHER", "plot3D", "plot3Drgl",
-               "phangorn", "RColorBrewer", "phylobase", "treeio", "ggtree", "Biostrings", "readxl", "tidyverse", "gtools", "rentrez")
+               "phangorn", "cowplot", "RColorBrewer", "phylobase", "treeio", "ggtree", "Biostrings", "readxl", "tidyverse", "gtools", "rentrez")
 # 
 # if (!requireNamespace("BiocManager", quietly = TRUE))
 #   install.packages("BiocManager")
 # BiocManager::install("ggtree", version = "3.8")
 
-BiocManager::install("treeio", version = "3.8")
+# BiocManager::install("treeio", version = "3.8")
 
 # Set working directory
 setwd("~/Documents/Wageningen_UR/github/adenylate_forming_phylo/")
@@ -57,8 +57,8 @@ pal <- c(pal, "black")
 # DistML
 aa338 <- readAAStringSet("output/cdhit_90perc_clusters.fasta")
 
-dec_aln <- AlignSeqs(aa338)
-writeXStringSet(dec_aln, "output/338_aligned_seqs_DECIPHER.fasta")
+# dec_aln <- AlignSeqs(aa338)
+# writeXStringSet(dec_aln, "output/338_aligned_seqs_DECIPHER.fasta")
 phy<-read.phyDat("output/338_aligned_seqs_DECIPHER.fasta", format="fasta",type="AA")
 
 
@@ -122,26 +122,26 @@ dev.off()
 
 # Color points for MDS 
 source("src/color_pcoa_points.r")
+sub_tofind <- unique(word(rownames(dat), 5, sep = "_"))
+sub_tofind
+tocol <- sub_tofind[!sub_tofind %in% c("PEPTIDE", "HOLDOUTTEST", "OTHER")]
+tocol
+pal <- palette(colorRampPalette(colors=brewer.pal(8,"Accent"))(length(tocol)))
+pal
+cdat <- color_pcoa_points(tocol, dat, pal)
+
+numseqs
 
 # Remove certain points
 rownames(cdat)
 word(rownames(cdat), 5, sep = "_")
 trdat <- cdat[!word(rownames(cdat), 5, sep = "_") == "OTHER",]
 trdat <- trdat[!word(rownames(trdat), 5, sep = "_") == "HOLDOUTTEST",]
+trdat <- trdat[!word(rownames(trdat), 5, sep = "_") == "PEPTIDE",]
 head(trdat)
 numseqs <- length(trdat$x)
 
-sub_tofind <- unique(word(rownames(trdat), 5, sep = "_"))
-sub_tofind
-tocol <- sub_tofind[!is.na(sub_tofind)]
-tocol
-pal <- palette(colorRampPalette(colors=brewer.pal(8,"Accent"))(length(tocol)))
 
-cdat <- color_pcoa_points(tocol, dat, pal)
-head(cdat)
-
-numseqs
-trdat$nms
 # Make a colored 2D plot
 pdf(paste0("output/", numseqs,"_PCoA_colored.pdf"))
 par(mar=c(0.01, 0.01, 0.01, 0.01))
@@ -150,28 +150,60 @@ ggplot(data = trdat, aes(x=x, y=y)) +
   # geom_text(x = cdat$x, y = cdat$y, label = cdat$labl, check_overlap = T) +
   geom_point(fill = trdat$colrs, size = trdat$sz, 
              alpha = trdat$alph, shape = 21) +
-  scale_color_manual(pal) +
+  scale_color_manual(unique(trdat$colrs)) +
   scale_shape(solid = TRUE) +
   labs(x=xlab,y=ylab) +
-  theme_bw() +
+  theme_bw() + 
   theme(axis.text = element_text(size = 14),
         legend.key = element_rect(fill = "white"),
         legend.background = element_rect(fill = "white"),
-        legend.position = c(0.80, 0.80),
+        legend.position = "bottom",
+        legend.box = "horizontal",
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        plot.title=element_text(size=20, face="bold", hjust=0)
-  )
+        plot.title=element_text(size=20, face="bold", hjust=0))
 dev.off()
 
 with(cdat, plot3d(x = x, y = y, z = z,
                   col = colrs, type = 's', size = 1))
 
-tocol
 
-pdf(file="324_ANL_legend.pdf",bg="white",width = 20)
+
+
+pdf(file="308_ANL_legend.pdf",bg="white",width = 20)
 plot.new()
 legend("center", pch='.', ncol=1,
-       legend= tocol, fill = pal, bty="n",
+       legend= unique(trdat$nms), fill = unique(trdat$colrs), bty="n",
        text.col="black")
+dev.off()
+
+length(tocol)
+tocol
+
+pllist <- list()
+for(i in 1:length(tocol)) {
+  trdat_one <- trdat[trdat$nms == tocol[i],]
+ 
+  pllist[[i]] <- ggplot(data = trdat_one, aes(x=x, y=y)) + 
+    geom_text(label = rownames(trdat_one)) +
+    # geom_text(x = cdat$x, y = cdat$y, label = cdat$labl, check_overlap = T) +
+    geom_point(fill = trdat_one$colrs, size = trdat_one$sz, 
+               alpha = trdat_one$alph, shape = 21) +
+    scale_color_manual(unique(trdat_one$colrs)) +
+    scale_shape(solid = TRUE) +
+    labs(x=xlab,y=ylab) +
+    theme_bw() + 
+    theme(axis.text = element_text(size = 14),
+          legend.key = element_rect(fill = "white"),
+          legend.background = element_rect(fill = "white"),
+          legend.position = "bottom",
+          legend.box = "horizontal",
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          plot.title=element_text(size=20, face="bold", hjust=0))
+}
+
+pdf(paste0("output/Plot_grid_PCoA_colored.pdf"), width = 30, height=  20)
+par(mar=c(0.01, 0.01, 0.01, 0.01))
+plot_grid(plotlist=pllist)
 dev.off()

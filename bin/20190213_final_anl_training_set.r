@@ -193,7 +193,7 @@ df_nofrag <- df4[-grep("Fragment", df4$protein_names),] #459 seqs
 table(df_nofrag$substrate_group)
 # df_nofrag$protein_names[is.na(df_nofrag$organism)]
 
-write_csv(df_nofrag, "data/final_anl_training_set_20190214.csv")
+# write_csv(df_nofrag, "data/final_anl_training_set_20190214.csv")
 
 df_nofrag$organism[grep("Wat", df_nofrag$organism)] <- "Watasenia scintillans"
 
@@ -208,14 +208,18 @@ df_for_phylo <- df_nofrag %>%
   mutate(substrate = str_replace_all(substrate, pattern = " ", replacement =  "")) %>%
   mutate(functional_class = str_replace_all(functional_class, pattern = "_|' '", replacement =  "")) %>%
  #  mutate(entry_name = str_replace_all(entry_name, pattern = "_", replacement =  "")) %>%
-  mutate(sqnams = paste0(1:nrow(df_for_phylo), "_", org_short, "_", substrate, "_", functional_class)) 
+  mutate(sqnams = paste0(1:nrow(df_nofrag), "_", org_short, "_", substrate, "_", functional_class)) 
 
-df_for_phylo$sqnams
+df_for_phylo
+
+df_for_phylo$entry_name[317]
+
 
 train459_aa <- AAStringSet(df_for_phylo$aa_seq)
+
 names(train459_aa) <- df_for_phylo$sqnams
-summary(width(train459_aa))
-writeXStringSet(train459_aa, "output/anl_459_training_set_seqs.fasta")
+# summary(width(train459_aa))
+# writeXStringSet(train459_aa, "output/anl_459_training_set_seqs.fasta")
 
 
 # Now try adding in the carnitine/crotonobetaine sequences
