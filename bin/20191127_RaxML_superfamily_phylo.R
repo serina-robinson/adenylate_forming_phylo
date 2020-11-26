@@ -21,12 +21,28 @@ dev.off()
 tofix <- pl$data$label[!pl$data$isTip]
 table(word(pl$data$label[pl$data$isTip], -1, sep = "_")) # looks good
 
+pl$data$label
+
 # Append metadata
 dd <- data.frame(label = pl$data$label,
                  grp = ifelse(pl$data$isTip, word(pl$data$label, -1, sep = "_"), "NONE"), 
-                 size = ifelse(as.numeric(pl$data$label) > 0.75, 0.1, 0))
+                 size = ifelse(as.numeric(pl$data$label) > 75, 0.5, -1))
 as.numeric(pl$data$label)
 p2 <- pl %<+% dd
+
+
+# Detect biosynthetic gene clusters
+rawdat <- read_excel("../mibig_training_set_build_test/data/combined_adenylate_forming_training_set_for_db_20191404.xlsx")
+rawdat <- rawdat[-grep(paste0(c("HOLDOUT", "OTHER", "CAR", "NRPS"), collapse = "|"), rawdat$functional_class),] # 658 observations
+dim(rawdat) # 627 sequences
+sqnams_tr <- paste0(rawdat$acc, "_", rawdat$organism, "_", rawdat$small_substrate_group, "_", rawdat$functional_class)
+which_mib <- rawdat$data_source == "mibig"
+nnodes <- length(p2$data$label[!p2$data$isTip])
+671-625
+for_coloring_final <- c(which_mib, rep(TRUE, 46))
+
+# for_coloring_final <- for_coloring[-grep("V9I5V9_9FABA", sqnams_tr)]
+
 
 # Set the color palette
 pal1 <- colorRampPalette(colors=brewer.pal(8, "Set1"))(8)
@@ -46,23 +62,24 @@ pal2 <- c(pal1, "#F781BF", "blue1", "darkorchid1", "navy", #"black",
 palette(pal2)
 pal2
 
-pdf("output/671_RaxML_bootstrapped.pdf", width = 15, height = 15)
+pdf("output/671_RaxML_bootstrapped_labeled.pdf", width = 12, height = 12)
 par(mar=c(0.001,0.001,0.001,0.001))
 ptree <- p2 +
   aes(color = grp) +
   scale_color_manual(values = pal2) +
   #ggplot2::xlim(-0.1, NA) +
   geom_nodepoint(size = p2$data$size[!p2$data$isTip], color = "gray40") +
-  # geom_tiplab2(aes(label = label), size = 0.5) +
+  geom_tiplab2(aes(label = label), size = 0.5) +
   # geom_tiplab2(aes(label = ifelse(grepl("Xanthomonas", label), label, ""), size = 0.5)) +
   theme(legend.position = "right") +
-  geom_treescale(offset = 1, fontsize = 4, x=3, y=1)
- #  geom_tippoint(alpha = 0.7, size = ifelse(for_coloring_final, -1, 2), color = "gray40") +#aes(x = x+0.2), alpha = 0.7, size = ifelse(for_coloring_final, -1, 1.5), color = "gray40")
-  
+  geom_treescale(offset = 1, fontsize = 4, x=3, y=1) #+
+  #ggplot2::xlim(0.5, NA) 
+  #geom_tippoint(alpha = 0.7, size = ifelse(for_coloring_final, -1, 2), color = "gray40")#aes(x = x+0.2), alpha = 0.7, size = ifelse(for_coloring_final, -1, 1.5), color = "gray40")
+ 
   # geom_nodelab(label = p2$data$node[!p2$data$isTip], color = "black", size = 2) +
   # geom_hilight_encircle(node = 727, fill = "#92D050", alpha = 0.2, linetype = 0)
 # geom_tiplab2(aes(label=label), size = 1)
-# ggplot2::xlim(-0.2, NA)
+# 
 #  geom_tiplab(aes(label=label), size=12, hjust=-.2)
 #   geom_tiplab2(aes(label=label), size=12, hjust=-.2)
 ptree

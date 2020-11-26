@@ -15,9 +15,6 @@ rawdat <- rawdat[-grep(paste0(c("HOLDOUT", "OTHER", "CAR", "NRPS"), collapse = "
 dim(rawdat) # 627 sequences
 sqnams_tr <- paste0(rawdat$acc, "_", rawdat$organism, "_", rawdat$small_substrate_group, "_", rawdat$functional_class)
 which_mib <- rawdat$data_source == "mibig"
-p2$data$label[p2$data$isTip] # 670
-length(which_mib)
-670-625
 for_coloring <- c(which_mib, rep(TRUE, 46))
 for_coloring_final <- for_coloring[-grep("V9I5V9_9FABA", sqnams_tr)]
 
